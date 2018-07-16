@@ -10,7 +10,7 @@ import (
 	"{{.PackageName}}"
 )
 
-func config{{pluralize .StructName}}Router(router *httprouter.Router) {
+func Config{{pluralize .StructName}}Router(router *httprouter.Router) {
 	router.GET("/{{pluralize .StructName | toLower}}", GetAll{{pluralize .StructName}})
 	router.POST("/{{pluralize .StructName | toLower}}", Add{{.StructName}})
 	router.GET("/{{pluralize .StructName | toLower}}/:id", Get{{.StructName}})
@@ -20,8 +20,6 @@ func config{{pluralize .StructName}}Router(router *httprouter.Router) {
 
 func GetAll{{pluralize .StructName}}(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	{{pluralize .StructName | toLower}} := []model.{{.StructName}}{}
-	DB.Find(&{{pluralize .StructName | toLower}})
-	writeJSON(w, &{{pluralize .StructName | toLower}})
 
 	page, err := readInt(r, "page", 1)
 	if err != nil || page < 1 {
@@ -35,18 +33,18 @@ func GetAll{{pluralize .StructName}}(w http.ResponseWriter, r *http.Request, ps 
 
 	order := r.FormValue("order")
 
-	{{pluralize .StructName | toLower}} := []*model.{{.StructName}}{}
 	
 	if order != "" {
 		err = DB.Model(&model.{{.StructName}}{}).Order(order).Offset(offset).Limit(pagesize).Find(&{{pluralize .StructName | toLower}}).Error
 	} else {
 		err = DB.Model(&model.{{.StructName}}{}).Offset(offset).Limit(pagesize).Find(&{{pluralize .StructName | toLower}}).Error
 	}
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	writeJSON(w, &{{pluralize .StructName | toLower}})
+
 }
 
 func Get{{.StructName}}(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

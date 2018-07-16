@@ -9,6 +9,9 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/julienschmidt/httprouter"
+	"strconv"
+	"log"
+	"net/url"
 )
 
 // example for init the database:
@@ -23,11 +26,32 @@ var DB *gorm.DB
 
 func ConfigRouter() http.Handler {
 	router := httprouter.New()
-    {{range .}}config{{pluralize .}}Router(router)
+    {{range .}}Config{{pluralize .}}Router(router)
     {{end}}
 	
 	return router
 }
+
+func readInt(r *http.Request, paramName string, defaultNumber int) (int, error) {
+	queryString := r.URL.RawQuery
+	if queryString == "" {
+		return defaultNumber, nil
+	}
+	m, err := url.ParseQuery(queryString)
+	if err != nil {
+		log.Fatal(err)
+		return defaultNumber, nil
+	}
+	if m[paramName] != nil {
+		integerValues, err := strconv.Atoi(m[paramName][0])
+		if err != nil {
+			return defaultNumber, err
+		}
+		return integerValues, nil
+	}
+	return defaultNumber, nil
+}
+
 
 func writeJSON(w http.ResponseWriter, v interface{}) {
 	data, _ := json.Marshal(v)
